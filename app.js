@@ -2,29 +2,43 @@
 let auth0 = null;
 
 async function configurarAuth() {
-  auth0 = await createAuth0Client({
-    domain: "TU_DOMINIO.auth0.com", // 🔥 CAMBIAR
-    clientId: "TU_CLIENT_ID",       // 🔥 CAMBIAR
-    authorizationParams: {
-      redirect_uri: window.location.origin
+  try {
+    auth0 = await createAuth0Client({
+      domain: "sportystyledksjs-jin7even.us.auth0.com",
+      clientId: "5EnnEv8nz2B0pKwo3DCjWtXTMHLtaNo5",
+      authorizationParams: {
+        redirect_uri: window.location.origin
+      }
+    });
+
+    // Cuando vuelve del login
+    if (window.location.search.includes("code=")) {
+      await auth0.handleRedirectCallback();
+      window.history.replaceState({}, document.title, "/");
     }
-  });
 
-  // Cuando vuelve del login
-  if (window.location.search.includes("code=")) {
-    await auth0.handleRedirectCallback();
-    window.history.replaceState({}, document.title, "/");
-  }
+    const isAuthenticated = await auth0.isAuthenticated();
 
-  const isAuthenticated = await auth0.isAuthenticated();
+    if (isAuthenticated) {
+      document.getElementById("usuario").textContent = "Hola Matías 👋";
+    } else {
+      document.getElementById("usuario").textContent = "No has iniciado sesión";
+    }
 
-  if (isAuthenticated) {
-    const user = await auth0.getUser();
-    document.getElementById("usuario").textContent = `Bienvenido ${user.name}`;
+    //  ACTIVASAO BOTÓN LOGIN
+    document.getElementById("loginBtn").disabled = false;
+
+  } catch (error) {
+    console.error(error);
+    alert("Error cargando Auth0");
   }
 }
 
 async function login() {
+  if (!auth0) {
+    alert("Cargando autenticación... intenta nuevamente");
+    return;
+  }
   await auth0.loginWithRedirect();
 }
 
@@ -35,7 +49,7 @@ function logout() {
     }
   });
 
-  sessionStorage.clear(); // 🔥 IMPORTANTE
+  sessionStorage.clear();
   mostrarCarrito();
 }
 
@@ -62,7 +76,7 @@ productos.forEach(p => {
 
 // ===================== CARRITO =====================
 
-// Agregar al carrito (con cantidad)
+// Agregar al carrito
 function agregarCarrito(id) {
   let carrito = JSON.parse(sessionStorage.getItem("carrito")) || [];
 
@@ -79,6 +93,16 @@ function agregarCarrito(id) {
   mostrarCarrito();
 }
 
+// Eliminar producto
+function eliminarProducto(index) {
+  let carrito = JSON.parse(sessionStorage.getItem("carrito")) || [];
+
+  carrito.splice(index, 1);
+
+  sessionStorage.setItem("carrito", JSON.stringify(carrito));
+  mostrarCarrito();
+}
+
 // Mostrar carrito
 function mostrarCarrito() {
   const carritoUI = document.getElementById("carrito");
@@ -89,11 +113,15 @@ function mostrarCarrito() {
   carritoUI.innerHTML = "";
   let total = 0;
 
-  carrito.forEach(p => {
+  carrito.forEach((p, index) => {
     const li = document.createElement("li");
-    li.textContent = `${p.nombre} x${p.cantidad} - $${p.precio * p.cantidad}`;
-    carritoUI.appendChild(li);
 
+    li.innerHTML = `
+      ${p.nombre} x${p.cantidad} - $${p.precio * p.cantidad}
+      <button onclick="eliminarProducto(${index})">❌</button>
+    `;
+
+    carritoUI.appendChild(li);
     total += p.precio * p.cantidad;
   });
 
@@ -107,19 +135,17 @@ mostrarCarrito();
 document.getElementById("form").addEventListener("submit", async function(e) {
   e.preventDefault();
 
-  // 🔐 Verificar login
   const isAuthenticated = await auth0.isAuthenticated();
+
   if (!isAuthenticated) {
     alert("Debes iniciar sesión primero");
     return;
   }
 
   const nombre = document.getElementById("nombre").value;
-  const direccion = document.getElementById("direccion").value;
   const correo = document.getElementById("correo").value;
   const telefono = document.getElementById("telefono").value;
 
-  // Validaciones mejoradas
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
     alert("Correo inválido");
     return;
@@ -148,4 +174,4 @@ document.getElementById("form").addEventListener("submit", async function(e) {
 });
 
 // ===================== INIT =====================
-configurarAuth();
+window.onload = configurarAuth;

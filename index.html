@@ -11,7 +11,7 @@
 
 <!-- 🔐 LOGIN -->
 <div style="text-align:center; margin-bottom:20px;">
-  <button onclick="login()">Iniciar sesión</button>
+  <button id="loginBtn" onclick="login()" disabled>Iniciar sesión</button>
   <button onclick="logout()">Cerrar sesión</button>
   <p id="usuario"></p>
 </div>
@@ -32,8 +32,8 @@
   <button type="submit">Comprar</button>
 </form>
 
-<!-- 🔥 SCRIPTS (ORDEN IMPORTANTE) -->
-<script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
+<!-- SCRIPT LOCAL -->
+<script src="auth0.js"></script>
 <script src="app.js"></script>
 
 </body>
